@@ -1,0 +1,363 @@
+# [INPUT]
+
+### Thymocyte homeostasis submodel parameters
+fi_t = 480000; #cells/day
+fi1 = 0.21; #1/day
+fi4 = 0.8; #1/day
+fi8 = 0.3; #1/day
+m1 = 0.056; #1/day
+m2 = 0.5; #1/day
+lambda1 = 1.67; #1/day
+lambda2 = 3.125; #1/day
+lambda4 = 0.22; #1/day
+lambda8 = 0.22; #1/day
+m4 = 0.005; #1/day
+m8 = 0.005; #1/day
+exp4 = 0.06; #1/day
+exp8 = 0.06; #1/day
+
+### Thymus involution submodel parameters
+
+# thymus wet weight vs age parameters
+WW_BL = 11.0948; #g
+WW_EC50_1 = 1.0909; #years
+WW_max = 24.4468; #g
+WW_EC50_2 = 52.2717; #years
+
+# Thymic epithelial space vs age parameters
+b_TES = 93.344; #%
+k_TES = -0.035; #%/years
+
+# Cortico-medullary ratio vs age parameters
+b_CM = 2.77; # -
+k_CM = -0.035; # 1/years
+
+# Thymic density vs age parameters
+b_Dens = 1.014; #g/cm3 
+k_Dens = -0.001; #g/(cm3*year) 
+
+
+# Thymic volume vs age parameters
+b_Vol = 25.18; #cm3
+k_Vol = -0.056; #cm3/year
+
+### Blood volume vs age parameters
+
+TM50_WT1 = 38.5; #years
+WTmax1 = 2.76; #kg
+hill1_WT1 = 12.9; #-
+hill2_WT1 = 2.74; #-
+TM50_WT2 = 2.1; #years
+WTmax2 = 16.4; #kg
+hill1_WT2 = 2.04; #-
+hill2_WT2 = 1; #-
+TM50_WT3 = 12.4; #years
+WTmax3 = 40.2; #kg
+hill1_WT3 = 2.87; #-
+hill2_WT3 = 0; #-
+WTmax4 = 33.6; #kg
+THALF_WT4 = 3.61; #years
+
+k_BV = 62.73817;  #mL/kg
+BV_BL = 357.30836; #mL
+
+### CD4+ T-lymphocyte homeostasis submodel parameters
+
+# CD4+ RTE T-cells
+m_rte4 = 0.0076; #1/day
+omega_rte4_bl_lt = 0.27; #1/day
+fi_rte4 = 0.002; #1/day
+
+# CD4+ Naive T-cells
+m_n4 = 0.000457; #1/day
+lambda_n4 = 0.019; #1/day
+fi_n4 = 0.0031; #1/day
+omega_n4_lt_bl = 1.43; #1/day
+omega_n4_bl_lt = 40; #1/day
+omega_n4_bl_git = 0.0003; #1/day
+omega_n4_bl_lung = omega_n4_bl_git; #1/day
+omega_n4_bl_tis = omega_n4_bl_git; #1/day
+omega_n4_git_bl = 0.00065; #1/day
+omega_n4_lung_bl = omega_n4_git_bl; #1/day
+
+# CD4+ Activated T-cells
+lambda_a4 = 1.8; #1/day
+fi_a4 = 1.9; #1/day
+m_a4 = 0.04; #1/day
+omega_a4_lt_bl = 4.2; #1/day
+omega_a4_bl_lt = 40; #1/day
+omega_a4_bl_tis = omega_n4_bl_git;
+f4 = 0.4; #-
+T_A4_max = 10000000000000; #cells
+
+# CD4+ Central-memory T-cells
+lambda_cm4 = 0.01; #1/day
+m_cm4 = 0.041; #1/day
+fi_cm4 = 0.075; #1/day
+omega_cm4_lt_bl = 0.29; #1/day
+omega_cm4_bl_lt = 10; #1/day
+omega_cm4_bl_git = 0.12; #1/day
+omega_cm4_bl_lung = omega_cm4_bl_git; #1/day
+omega_cm4_bl_tis = omega_cm4_bl_git; #1/day
+omega_cm4_git_bl = 0.08; #1/day
+omega_cm4_lung_bl = omega_cm4_git_bl; #1/day
+
+# CD4+ Effector-memory T-cells
+lambda_em4 = 0.1; #1/day
+m_em4 = 0.11; #1/day
+fi_em4 = 0.0534; #1/day
+omega_em4_lt_bl = 0.03; #1/day
+omega_em4_bl_git = 0.744; #1/day
+omega_em4_bl_lung = omega_em4_bl_git; #1/day
+omega_em4_bl_tis = omega_em4_bl_git; #1/day
+omega_em4_git_bl = 0.01; #1/day
+omega_em4_lung_bl = omega_em4_git_bl; #1/day
+
+# CD4+ Effector T-cells
+m_eff4 = 0.894; #1/day
+omega_eff4_lt_bl = 0.235; #1/day
+omega_eff4_bl_git = 0.098; #1/day
+omega_eff4_bl_lung = omega_eff4_bl_git; #1/day
+omega_eff4_bl_tis = omega_eff4_bl_git; #1/day
+
+age = 0; #years
+
+# [MODEL]
+
+### Thymus involution submodel equations
+
+# thymus wet weight vs age 
+WW_g = (WW_BL + WW_max*age/(age + WW_EC50_1)) * (1 - age/(age + WW_EC50_2));
+WW = WW_g / WW_BL;
+
+
+# TES and CM vs age 
+TES = b_TES * exp(k_TES*age) / 100;
+CM = b_CM * exp(k_CM*age);
+
+# Maximal capacity of thymic cortex and medulla (Tcort and Tmed) vs age
+T0 = 1026.05 * 10^6 * WW_BL; # calculated according to cell density in thymus in newborns (Bertho et al., 1997)
+ 
+Tcort = CM / (CM + 1) * WW * TES * T0;
+Tmed = 1 / (CM + 1) * WW * TES * T0;
+
+# Thymic density and volume vs age
+Dens = (b_Dens + k_Dens * age)
+Vol = (b_Vol + k_Vol * age)
+
+# Relative volume of thymic cortex and medulla vs age
+Tcort_relvol = (CM / (CM + 1)) * (WW_g * TES / Dens) / Vol * 100
+Tmed_relvol = (1 / (CM + 1)) * (WW_g * TES / Dens) / Vol * 100
+
+# Thymocyte percentages
+T_thym_all = TDN + TDP + TSP4 + TSP8;
+TSP = TSP4 + TSP8;
+
+TDN_perc = TDN/T_thym_all * 100;
+TDP_perc = TDP/T_thym_all * 100;
+TSP_perc = TSP/T_thym_all * 100;
+TSP4_perc = TSP4/T_thym_all * 100;
+TSP8_perc = TSP8/T_thym_all * 100;
+
+T_cell_dens = T_thym_all * 10^-6 / WW_g
+
+
+### Blood volume vs age equations
+  
+if (age < TM50_WT1) {
+  hill1 = hill1_WT1;
+} else {
+  hill1 = hill2_WT1;
+}
+
+if (age < TM50_WT2) {
+  hill2 = hill1_WT2;
+} else {
+  hill2 = hill2_WT2;
+}
+
+if (age < TM50_WT3) {
+  hill3 = hill1_WT3;
+} else {
+  hill3 = hill2_WT3;
+}
+
+if (age < TM50_WT3) {
+  WT4 = 0;
+} else {
+  WT4 = WTmax4*(1 - exp(-log(2)/THALF_WT4*(age-TM50_WT3)));
+}
+  
+WT1 = WTmax1/(1+(TM50_WT1/age)^hill1);
+WT2 = WTmax2/(1+(TM50_WT2/age)^hill2);
+WT3 = WTmax3/(1+(TM50_WT3/age)^hill3);
+  
+WT = WT1 + WT2 + WT3 + WT4;
+  
+BV = BV_BL + k_BV * WT;
+
+### Age-dependent functions
+
+lambda_a4_age = lambda_a4*(1 + lambda_a4_max*age/(age + lambda_a4_50));
+
+lambda_n4_age = lambda_n4*(1 + lambda_n4_max*age^Nh_lambda_n4/(age^Nh_lambda_n4 + lambda_n4_50^Nh_lambda_n4));
+
+m_rte4_age = m_rte4*(1 - m_rte4_max*age^Nh_m_rte4/(age^Nh_m_rte4 + m_rte4_50^Nh_m_rte4));
+omega_rte4_bl_lt_age = omega_rte4_bl_lt*(1 - omega_rte4_bl_lt_max*age/(age + omega_rte4_bl_lt_50));
+
+fi_cm4_age = fi_cm4* (1 - fi_cm4_max*age^Nh_fi_cm4/(age^Nh_fi_cm4 + fi_cm4_50^Nh_fi_cm4));
+
+omega_a4_lt_bl_age = omega_a4_lt_bl*(1 - omega_a4_lt_bl_max*age/(age + omega_a4_lt_bl_50));
+omega_eff4_lt_bl_age = omega_eff4_lt_bl*(1 - omega_eff4_lt_bl_max*age/(age + omega_eff4_lt_bl_50));
+omega_cm4_lt_bl_age = omega_cm4_lt_bl*(1 - omega_cm4_lt_bl_max*age/(age + omega_cm4_lt_bl_50));
+
+fi_em4_age = fi_em4* (1 - fi_em4_max*age/(age + age_50));
+
+omega_em4_lung_bl_age = omega_em4_lung_bl*(1 + omega_em4_lung_bl_max*age/(age+age_50));
+
+omega_eff4_bl_tis_age = omega_eff4_bl_tis*(1 + omega_eff4_bl_tis_max*age/(age + age_50));
+omega_eff4_bl_git_age = omega_eff4_bl_git*(1 + omega_eff4_bl_tis_max*age/(age + age_50));
+omega_eff4_bl_lung_age = omega_eff4_bl_lung*(1 + omega_eff4_bl_tis_max*age/(age + age_50));
+
+### CD4+ T-lymphocyte homeostasis submodel equations
+
+# Explicit functions
+T4_lt = T_N4_lt + T_CM4_lt + T_EM4_lt + T_EFF4_lt;
+T4_mem_lt =  T_CM4_lt + T_EM4_lt;
+
+T4_git = T_EM4_git + T_EFF4_git + T_N4_git + T_CM4_git;
+T4_mem_git = T_EM4_git + T_CM4_git;
+
+T4_lung = T_EM4_lung + T_EFF4_lung + T_N4_lung + T_CM4_lung;
+T4_mem_lung = T_EM4_lung + T_CM4_lung;
+
+T4_bl = T_N4_bl + T_CM4_bl + T_EM4_bl + T_EFF4_bl;
+T4_mem_bl = T_EM4_bl + T_CM4_bl;
+
+
+# Relative percentages of CD4+ T-lymphocyte subpopulations in organs
+T_RTE4_lt_perc = T_RTE4_lt * 100 / T4_lt;
+T_N4_lt_perc = T_N4_lt * 100 / T4_lt;
+T_A4_lt_perc = T_A4_lt * 100 / T4_lt;
+T_CM4_lt_perc = T_CM4_lt * 100 / T4_lt;
+T_EM4_lt_perc = T_EM4_lt * 100 / T4_lt;
+T_EFF4_lt_perc = T_EFF4_lt * 100 / T4_lt;
+
+T_EM4_git_perc = T_EM4_git * 100 / T4_git;
+T_EFF4_git_perc = T_EFF4_git * 100 / T4_git;
+T_N4_git_perc = T_N4_git * 100 / T4_git;
+T_CM4_git_perc = T_CM4_git * 100 / T4_git;
+
+T_EM4_lung_perc = T_EM4_lung * 100 / T4_lung;
+T_EFF4_lung_perc = T_EFF4_lung * 100 / T4_lung;
+T_N4_lung_perc = T_N4_lung * 100 / T4_lung;
+T_CM4_lung_perc = T_CM4_lung * 100 / T4_lung;
+
+T_MEM4_lt_perc = T4_mem_lt * 100 / T4_lt;
+T_MEM4_git_perc = T4_mem_git * 100 / T4_git;
+T_MEM4_lung_perc = T4_mem_lung * 100 / T4_lung;
+
+# Blood concentration (cells/uL) of CD4+ T-lymphocyte subpopulations
+
+T_RTE4_bl_cells_uL = T_RTE4_bl / (BV * 10^3);
+T_N4_bl_cells_uL = T_N4_bl / (BV * 10^3);
+T_A4_bl_cells_uL = T_A4_bl / (BV * 10^3);
+T_CM4_bl_cells_uL = T_CM4_bl / (BV * 10^3);
+T_EM4_bl_cells_uL = T_EM4_bl / (BV * 10^3);
+T_EFF4_bl_cells_uL = T_EFF4_bl / (BV * 10^3);
+
+T4_bl_cells_uL =  T_N4_bl_cells_uL  + T_CM4_bl_cells_uL + T_EM4_bl_cells_uL + T_EFF4_bl_cells_uL;
+T_MEM4_bl_cells_uL = T_CM4_bl_cells_uL + T_EM4_bl_cells_uL;
+
+
+# Initial conditions
+
+TDN(0) = 0;
+TDP(0) = 0;
+TSP4(0) = 0;
+TSP8(0) = 0;
+
+T_RTE4_bl(0) = 0;
+T_RTE4_lt(0) = 0;
+
+T_N4_lt(0) = 0;
+T_N4_bl(0) = 0;
+T_N4_git(0) = 0;
+T_N4_lung(0) = 0;
+
+T_A4_lt(0) = 0;
+T_A4_bl(0) = 0;
+
+T_CM4_lt(0) = 0;
+T_CM4_bl(0) = 0;
+T_CM4_git(0) = 0;
+T_CM4_lung(0) = 0;
+
+T_EM4_lt(0) = 0;
+T_EM4_bl(0) = 0;
+T_EM4_git(0) = 0;
+T_EM4_lung(0) = 0;
+
+T_EFF4_lt(0) = 0;
+T_EFF4_bl(0) = 0;
+T_EFF4_git(0) = 0;
+T_EFF4_lung(0) = 0;
+
+### ODEs
+
+# Thymocyte homeostasis submodel ODEs
+
+d/dt(TDN) = fi_t*(1 - (TDN+TDP)/Tcort) - fi1*TDN + lambda1*(1 - (TDN+TDP)/Tcort)*TDN - m1*TDN;
+
+d/dt(TDP) =  fi1*TDN + lambda2*(1 - (TDN+TDP)/Tcort)*TDP - (fi4 + fi8)*TDP*(1 - (TSP4 + TSP8) / Tmed) - m2*TDP;
+
+d/dt(TSP4) = fi4*(1 - (TSP4 + TSP8) / Tmed)*TDP - exp4*TSP4 + lambda4*(1 - (TSP4 + TSP8) / Tmed)*TSP4 - m4*TSP4;
+
+d/dt(TSP8) = fi8*(1 - (TSP4 + TSP8) / Tmed)*TDP - exp8*TSP8  + lambda8*(1 - (TSP4 + TSP8) / Tmed)*TSP8 - m8*TSP8;
+
+# CD4+ T-lymphocyte homeostasis submodel ODEs
+
+d/dt(T_RTE4_bl) = exp4*TSP4 - m_rte4_age*T_RTE4_bl - omega_rte4_bl_lt_age*T_RTE4_bl;
+
+d/dt(T_RTE4_lt) = omega_rte4_bl_lt_age*T_RTE4_bl - fi_rte4*T_RTE4_lt - m_rte4_age*T_RTE4_lt;
+
+
+d/dt(T_N4_lt) = fi_rte4*T_RTE4_lt - m_n4*T_N4_lt - omega_n4_lt_bl*T_N4_lt + omega_n4_bl_lt*T_N4_bl - fi_n4*T_N4_lt + lambda_n4_age*T_N4_lt;
+
+d/dt(T_N4_bl) = omega_n4_lt_bl*T_N4_lt - omega_n4_bl_lt*T_N4_bl + omega_n4_git_bl*T_N4_git - omega_n4_bl_git*T_N4_bl + omega_n4_lung_bl*T_N4_lung - omega_n4_bl_lung*T_N4_bl - omega_n4_bl_tis*T_N4_bl - m_n4*T_N4_bl;
+
+d/dt(T_N4_git) = omega_n4_bl_git*T_N4_bl - omega_n4_git_bl*T_N4_git - m_n4*T_N4_git;
+
+d/dt(T_N4_lung) = omega_n4_bl_lung*T_N4_bl - omega_n4_lung_bl*T_N4_lung - m_n4*T_N4_lung;
+
+
+d/dt(T_A4_lt) = fi_n4*T_N4_lt - m_a4*T_A4_lt + lambda_a4_age*T_A4_lt*(1 - T_A4_lt/T_A4_max) - omega_a4_lt_bl_age*T_A4_lt + omega_a4_bl_lt*T_A4_bl - fi_a4*T_A4_lt;
+
+d/dt(T_A4_bl) = omega_a4_lt_bl_age*T_A4_lt - omega_a4_bl_lt*T_A4_bl - omega_a4_bl_tis*T_A4_bl - m_a4*T_A4_bl;
+
+
+d/dt(T_CM4_lt) = f4*fi_a4*T_A4_lt - m_cm4*T_CM4_lt + lambda_cm4*T_CM4_lt - omega_cm4_lt_bl_age*T_CM4_lt + omega_cm4_bl_lt*T_CM4_bl - fi_cm4_age*T_CM4_lt;
+
+d/dt(T_CM4_bl) = omega_cm4_lt_bl_age*T_CM4_lt - omega_cm4_bl_lt*T_CM4_bl + omega_cm4_git_bl*T_CM4_git - omega_cm4_bl_git*T_CM4_bl + omega_cm4_lung_bl*T_CM4_lung - omega_cm4_bl_lung*T_CM4_bl - omega_cm4_bl_tis*T_CM4_bl - m_cm4*T_CM4_bl;
+
+d/dt(T_CM4_git) = omega_cm4_bl_git*T_CM4_bl - omega_cm4_git_bl*T_CM4_git - m_cm4*T_CM4_git;
+
+d/dt(T_CM4_lung) = omega_cm4_bl_lung*T_CM4_bl - omega_cm4_lung_bl*T_CM4_lung - m_cm4*T_CM4_lung;
+
+
+d/dt(T_EM4_lt) = fi_cm4_age*T_CM4_lt - m_em4*T_EM4_lt + lambda_em4*T_EM4_lt - omega_em4_lt_bl*T_EM4_lt - fi_em4_age*T_EM4_lt;
+
+d/dt(T_EM4_bl) = omega_em4_lt_bl*T_EM4_lt - omega_em4_bl_git*T_EM4_bl + omega_em4_git_bl*T_EM4_git - omega_em4_bl_lung*T_EM4_bl + omega_em4_lung_bl_age*T_EM4_lung - omega_em4_bl_tis*T_EM4_bl - m_em4*T_EM4_bl;
+
+d/dt(T_EM4_git) =  omega_em4_bl_git*T_EM4_bl - omega_em4_git_bl*T_EM4_git - m_em4*T_EM4_git;
+
+d/dt(T_EM4_lung) =  omega_em4_bl_lung*T_EM4_bl - omega_em4_lung_bl_age*T_EM4_lung - m_em4*T_EM4_lung;
+
+
+d/dt(T_EFF4_lt) = fi_em4_age*T_EM4_lt + (1-f4)*fi_a4*T_A4_lt  - omega_eff4_lt_bl_age*T_EFF4_lt - m_eff4*T_EFF4_lt;
+
+d/dt(T_EFF4_bl) = omega_eff4_lt_bl_age*T_EFF4_lt - omega_eff4_bl_git_age*T_EFF4_bl - omega_eff4_bl_lung_age*T_EFF4_bl - omega_eff4_bl_tis_age*T_EFF4_bl - m_eff4*T_EFF4_bl;
+
+d/dt(T_EFF4_git) = omega_eff4_bl_git_age*T_EFF4_bl - m_eff4*T_EFF4_git;
+
+d/dt(T_EFF4_lung) = omega_eff4_bl_lung_age*T_EFF4_bl - m_eff4*T_EFF4_lung;
